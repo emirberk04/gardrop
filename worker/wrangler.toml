@@ -1,0 +1,10 @@
+name = "gardirop-etiket"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Uygulamanın yayınlandığı adres; başka sitelerden gelen istekler reddedilir.
+IZINLI_KOKEN = "http://localhost:5173"
+
+# API anahtarı koda gömülmez:  npx wrangler secret put ANTHROPIC_API_KEY
