@@ -18,6 +18,8 @@ function kullanilmayanOrtDosyalariniAt(): Plugin {
 }
 
 export default defineConfig({
+  // GitHub Pages proje sitesi alt yolda yayınlanır (BASE_PATH=/gardrop/), yerelde kök
+  base: process.env.BASE_PATH ?? '/',
   define: { __SURUM__: JSON.stringify(paket.version) },
   plugins: [
     react(),
@@ -30,7 +32,6 @@ export default defineConfig({
         short_name: 'Gardırop',
         description: 'Kişisel, yapay zekâ destekli kombin uygulaması',
         lang: 'tr',
-        start_url: '/',
         display: 'standalone',
         background_color: '#F1F3F0',
         theme_color: '#2F3E6B',

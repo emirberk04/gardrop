@@ -42,11 +42,11 @@ async function sabahBildirimi(zorla = false) {
   if (!ozet) return;
   await self.registration.showNotification(ozet.baslik, {
     body: ozet.govde,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: new URL('icon-192.png', self.registration.scope).href,
+    badge: new URL('icon-192.png', self.registration.scope).href,
     tag: 'sabah-kombin',
     lang: 'tr',
-    data: { url: '/' },
+    data: { url: self.registration.scope },
   });
   if (!zorla) await ayarGuncelle({ sonBildirim: bugunStr() });
 }
@@ -66,7 +66,7 @@ self.addEventListener('notificationclick', (e) => {
       const pencereler = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       const acik = pencereler.find((p) => 'focus' in p);
       if (acik) return (acik as WindowClient).focus();
-      return self.clients.openWindow(e.notification.data?.url ?? '/');
+      return self.clients.openWindow(e.notification.data?.url ?? self.registration.scope);
     })(),
   );
 });

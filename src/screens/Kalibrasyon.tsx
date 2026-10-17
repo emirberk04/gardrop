@@ -76,7 +76,7 @@ export function Kalibrasyon({ karsilama, bitti }: { karsilama: boolean; bitti: (
   if (!basladi) {
     return (
       <div className="karsilama">
-        <img src="/icon.svg" alt="" width={72} height={72} style={{ borderRadius: 18 }} />
+        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width={72} height={72} style={{ borderRadius: 18 }} />
         <h1 className="ekran-basligi">Gardırop</h1>
         <p className="soluk" style={{ margin: 0 }}>
           Dolabın telefonunda. Her sabah havaya uygun, en şık kombinler önünde; sen sadece seçersin.

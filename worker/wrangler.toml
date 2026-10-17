@@ -5,6 +5,6 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 # Uygulamanın yayınlandığı adres; başka sitelerden gelen istekler reddedilir.
-IZINLI_KOKEN = "http://localhost:5173"
+IZINLI_KOKEN = "https://emirberk04.github.io"
 
 # API anahtarı koda gömülmez:  npx wrangler secret put ANTHROPIC_API_KEY

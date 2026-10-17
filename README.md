@@ -4,21 +4,25 @@ Kişisel, telefonda kullanılan, yapay zekâ destekli kombin uygulaması (PWA).
 Dolaptaki parçalardan mantıklı kombinlerin hepsini üretir, bugünün havasına göre süzer,
 en şık olanları öne koyar. Tasarım ve ürün dokümanı: [docs/TASARIM.md](docs/TASARIM.md).
 
-## Telefonda kullanmak (yayına alma)
+## Telefonda kullanmak
 
-Repo gizli olduğu için GitHub Pages ücretsiz planda çalışmaz; Cloudflare Pages ya da Vercel
-gizli repoyu ücretsiz yayınlar. Kamera, çevrimdışı çalışma ve bildirim için HTTPS gerekir,
-bu yüzden yerel ağ adresi (`--host`) yerine yayınlanmış adresi kullan.
+Uygulama `main` dalına her push'ta GitHub Actions ile **https://emirberk04.github.io/gardrop/**
+adresine yayınlanır (`.github/workflows/pages.yml`). Bir kerelik ayar (repo sahibi yapar):
 
-**Cloudflare Pages:** dash.cloudflare.com → Workers & Pages → Create → Pages → Connect to Git →
-`emirberk04/gardrop`. Build command: `npm run build`, output: `dist`. Kaydet; her push'ta yeniden yayınlanır.
-
-**Vercel:** vercel.com/new → repoyu seç → Vite otomatik tanınır → Deploy.
+1. **Settings → General → Danger Zone → Change visibility → Public.**
+   Ücretsiz planda GitHub Pages sadece herkese açık repolarda çalışır. Kodda gizli bilgi yok;
+   API anahtarı repoda değil, etiketleme sunucusunda saklanır. Kıyafet fotoğrafların repoda değil,
+   sadece telefonunda durur.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+3. **Actions → "Yayınla (GitHub Pages)" → Run workflow** (ya da `main`'e yeni bir push).
 
 Sonra telefonda adresi aç:
 - **iPhone (Safari):** Paylaş → Ana Ekrana Ekle. Uygulamayı hep ana ekrandaki simgeden aç;
   Safari, ana ekrana eklenmeyen sitelerin verisini bir süre sonra silebilir.
 - **Android (Chrome):** menü → Uygulamayı yükle.
+
+Repo gizli kalacaksa alternatif: Cloudflare Pages ya da Vercel gizli repoyu ücretsiz yayınlar
+(build `npm run build`, çıktı `dist`).
 
 ## Geliştirme
 
