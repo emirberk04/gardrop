@@ -176,7 +176,6 @@ h1, h2, h3 { font-family: var(--f-head); font-weight: 600; margin: 0; letter-spa
 .kolaj .sag { grid-template-rows: 1.5fr 1fr; }
 .kolaj img, .kolaj .bos-gorsel { width: 100%; height: 100%; object-fit: contain; min-height: 0; }
 .kolaj img.kesit { filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.14)); }
-.kolaj .aksesuar { position: absolute; right: var(--s3); top: var(--s3); width: 22%; height: 22%; }
 .kolaj.kucuk-kolaj { padding: var(--s2); gap: 3px; }
 
 /* ---- Skor etiketi ---- */
@@ -272,3 +271,23 @@ input[type='range'] { width: 100%; accent-color: var(--denim); min-height: 44px;
 .bar > span { display: block; height: 100%; background: var(--denim); }
 .gorunmez { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav-h) + var(--safe-b) + var(--s4)); z-index: 60; background: var(--ink); color: var(--bg); padding: var(--s3) var(--s4); border-radius: 12px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100% - 32px); animation: sol 200ms; }
+
+/* ---- Karşılama ve kalibrasyon ---- */
+.karsilama {
+  min-height: calc(100dvh - var(--safe-t) - var(--safe-b) - 32px);
+  display: flex; flex-direction: column; align-items: center; gap: var(--s4); text-align: center;
+  padding-top: var(--s5);
+}
+.karsilama.kalibrasyon { padding-top: 0; gap: var(--s3); }
+.karsilama .ipuclari { text-align: left; }
+.kolaj.ornek svg { width: 100%; height: 100%; }
+.panel .karsilama { min-height: 70dvh; padding-top: 0; }
+
+/* ---- Silüet üzerinde gösterim ---- */
+.uzerimde { position: relative; background: var(--photo-bg); aspect-ratio: 1 / 1.05; overflow: hidden; }
+.uzerimde .govde { position: absolute; top: var(--s3); left: 50%; transform: translateX(-50%); height: calc(100% - 2 * var(--s3)); }
+.uzerimde .govde > img.siluet { height: 100%; width: auto; max-width: none; opacity: 0.55; filter: grayscale(1); }
+.uzerimde .katman { position: absolute; object-fit: contain; pointer-events: none; filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.18)); }
+.gorunum-sec { position: absolute; top: var(--s3); right: var(--s3); z-index: 10; }
+.gorunum-sec button { min-height: 32px; font-size: 13px; }
+.deste .gorunum-sec, .kombin-kart .gorunum-sec { pointer-events: auto; }

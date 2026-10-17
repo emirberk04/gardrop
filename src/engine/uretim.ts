@@ -64,9 +64,11 @@ export function skorla(ps: Parca[], b: MotorBaglami): SkorluKombin {
 
   let havaPuan = 0.7;
   let havaNotu = '';
+  let yagmur = 0;
   if (b.hava) {
     const h = havaUyumu(ps, b.hava, b.hassasiyet);
     havaPuan = h.puan;
+    yagmur = h.yagmurEtkisi;
     havaNotu = h.not;
     gerekceler.push({ tur: 'hava', metin: h.not.charAt(0).toLocaleUpperCase('tr') + h.not.slice(1) });
   }
@@ -113,7 +115,8 @@ export function skorla(ps: Parca[], b: MotorBaglami): SkorluKombin {
     AGIRLIK.hava * havaPuan +
     AGIRLIK.desen * desen.puan +
     AGIRLIK.zevk * zevk.puan +
-    yenilik -
+    yenilik +
+    yagmur -
     tekrar -
     abarti;
   const skor = Math.round(clamp(ham, 0, 1) * 100);
@@ -199,13 +202,42 @@ function eksikBul(parcalar: Parca[], b: MotorBaglami): string {
   return 'Parçaların formaliteleri birbirine uymuyor. Farklı tarzda bir alt ya da ayakkabı eklemeyi dene.';
 }
 
+/**
+ * İsteğe bağlı aksesuar (bölüm 7.1): soğukta bere/atkı, sıcakta şapka, şık kombinde kemer.
+ * Kombin sayısını katlamamak için sıralamadan sonra en uyumlu tek aksesuar eklenir.
+ */
+export function aksesuarEkle(k: SkorluKombin, harita: Map<string, Parca>, aksesuarlar: Parca[], b: MotorBaglami): SkorluKombin {
+  if (!aksesuarlar.length || !b.hava) return k;
+  const ps = k.parcalar.map((id) => harita.get(id)!);
+  const g = giysiler(ps);
+  const ortF = g.reduce((t, p) => t + p.formalite, 0) / g.length;
+  const h = b.hava.hissedilen;
+  const uygun = aksesuarlar.filter((a) => {
+    if (!mevsimUygun(a, h) || Math.abs(a.formalite - ortF) > 1.5) return false;
+    if (/bere|atkı/.test(a.tur)) return h < 10;
+    if (/şapka/.test(a.tur)) return h >= 22;
+    if (/kemer/.test(a.tur)) return ortF >= 3 && ps.some((p) => p.kategori === 'alt');
+    return a.sicaklik >= 4 ? h < 10 : h >= 18;
+  });
+  let enIyi: { a: Parca; puan: number } | null = null;
+  for (const a of uygun) {
+    const puan = renkUyumu([...g, { ...a, kategori: 'ust' }]).puan;
+    if (!enIyi || puan > enIyi.puan) enIyi = { a, puan };
+  }
+  if (!enIyi || enIyi.puan < 0.6) return k;
+  const yeni = skorla([...ps, enIyi.a], b);
+  const neden = /bere|atkı/.test(enIyi.a.tur) ? 'soğuk için' : /şapka/.test(enIyi.a.tur) ? 'güneş için' : 'tamamlayıcı';
+  return { ...yeni, gerekceler: [...yeni.gerekceler, { tur: 'hava', metin: `${enIyi.a.tur.charAt(0).toLocaleUpperCase('tr') + enIyi.a.tur.slice(1)}, ${neden}` }] };
+}
+
 export function uret({ parcalar, baglam, odak, limit }: UretimIstegi): UretimSonucu {
   const harita = new Map(parcalar.map((p) => [p.id, p]));
   let tum = adaylar(parcalar);
   if (odak) tum = tum.filter((ps) => ps.some((p) => p.id === odak));
   const gecen = tum.filter((ps) => sertElemedenGecer(ps, baglam));
   const skorlu = gecen.map((ps) => skorla(ps, baglam));
-  const sirali = cesitlendir(skorlu, harita);
+  const aksesuarlar = parcalar.filter((p) => p.durum === 'aktif' && p.kategori === 'aksesuar');
+  const sirali = cesitlendir(skorlu, harita).map((k, i) => (i < 200 ? aksesuarEkle(k, harita, aksesuarlar, baglam) : k));
   return {
     kombinler: limit ? sirali.slice(0, limit) : sirali,
     toplamAday: tum.length,

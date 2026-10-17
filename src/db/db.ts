@@ -19,13 +19,15 @@ db.version(1).stores({
 
 export const VARSAYILAN_AYARLAR: Ayarlar = {
   id: 'ben',
-  sehir: { ad: 'Konya', enlem: 37.8746, boylam: 32.4932 },
+  sehir: { ad: 'Ankara', enlem: 39.9334, boylam: 32.8597 },
   hassasiyet: 0,
   tema: 'sistem',
   ortam: 'gunluk',
   havaFiltresi: true,
   etiketSunucusu: '',
   kalibrasyonYapildi: false,
+  gorunum: 'kolaj',
+  bildirim: false,
 };
 
 export const BOS_ZEVK: ZevkProfili = {
@@ -49,15 +51,4 @@ export async function ayarGuncelle(degisiklik: Partial<Omit<Ayarlar, 'id'>>) {
 
 export async function zevkAl(): Promise<ZevkProfili> {
   return { ...BOS_ZEVK, ...(await db.zevk.get('ben')) };
-}
-
-/** Tarayıcının veriyi kendiliğinden silmesini engelle (bölüm 3.5). */
-export async function kaliciDepolamaIste() {
-  try {
-    if (navigator.storage?.persist && !(await navigator.storage.persisted())) {
-      await navigator.storage.persist();
-    }
-  } catch {
-    // desteklenmiyorsa sessizce geç
-  }
 }

@@ -4,27 +4,48 @@ Kişisel, telefonda kullanılan, yapay zekâ destekli kombin uygulaması (PWA).
 Dolaptaki parçalardan mantıklı kombinlerin hepsini üretir, bugünün havasına göre süzer,
 en şık olanları öne koyar. Tasarım ve ürün dokümanı: [docs/TASARIM.md](docs/TASARIM.md).
 
-## Çalıştırma
+## Telefonda kullanmak (yayına alma)
+
+Repo gizli olduğu için GitHub Pages ücretsiz planda çalışmaz; Cloudflare Pages ya da Vercel
+gizli repoyu ücretsiz yayınlar. Kamera, çevrimdışı çalışma ve bildirim için HTTPS gerekir,
+bu yüzden yerel ağ adresi (`--host`) yerine yayınlanmış adresi kullan.
+
+**Cloudflare Pages:** dash.cloudflare.com → Workers & Pages → Create → Pages → Connect to Git →
+`emirberk04/gardrop`. Build command: `npm run build`, output: `dist`. Kaydet; her push'ta yeniden yayınlanır.
+
+**Vercel:** vercel.com/new → repoyu seç → Vite otomatik tanınır → Deploy.
+
+Sonra telefonda adresi aç:
+- **iPhone (Safari):** Paylaş → Ana Ekrana Ekle. Uygulamayı hep ana ekrandaki simgeden aç;
+  Safari, ana ekrana eklenmeyen sitelerin verisini bir süre sonra silebilir.
+- **Android (Chrome):** menü → Uygulamayı yükle.
+
+## Geliştirme
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # kombin motoru testleri
-npm run build      # dist/ (Cloudflare Pages / Vercel'e statik olarak yüklenir)
+npm test           # kombin motoru, kalibrasyon ve sabah bildirimi testleri
+npm run build      # dist/
 ```
-
-Telefonda denemek için `npm run dev -- --host` ile aynı ağdan aç, sonra
-**Paylaş → Ana Ekrana Ekle**. iPhone'da veri kalıcılığı için ana ekrana eklemek önemli (bölüm 3.5).
 
 ## Durum
 
-| Sürüm | Durum |
+| Sürüm | İçerik |
 |---|---|
-| v0.1 Dolap | Fotoğraf çek / galeriden seri ekle, 600px WebP'ye küçült, cihazda arka plan silme (`@imgly/background-removal`), k-means ile renk çıkarma ve Türkçe renk adı, tür kataloğundan otomatik dolan etiketler, isteğe bağlı AI etiketleme, 3 sütunlu ızgara, detay paneli, düzenleme, arşiv. IndexedDB (Dexie) + `storage.persist()` |
-| v0.2 Bugün | Web Worker'da kombin motoru (şablonlar, sert eleme, renk/formalite/hava/desen/zevk skoru, yenilik bonusu, tekrar cezası, MMR çeşitlilik), Open-Meteo, Bugün ekranı, kaydırmalı kart, "Neden?" gerekçeleri, flat-lay kolaj |
-| v0.3 Öğrenme | Giyeceğim / Kaydet / Geç / Bir daha gösterme sinyalleri ve hareketli ortalamalı zevk profili, Kombinler ekranı, yeni parça bildirimi **hazır**. 8 kartlık zevk kalibrasyonu **yapılmadı** |
-| v0.4 Güvence | Yedekle / geri yükle, giyilmeyenler filtresi, istatistik, depolama koruması **hazır**. Aylık yedek hatırlatması sadece Ben ekranında not olarak |
-| v1.0 Cila | Açık/koyu/sistem tema hazır. Silüet üzerinde gösterim ve bildirimler yok |
+| v0.1 Dolap | Fotoğraf çek / galeriden seri ekle, 600px WebP'ye küçült, cihazda arka plan silme, k-means ile renk çıkarma ve Türkçe renk adı, tür kataloğundan otomatik dolan etiketler, isteğe bağlı AI etiketleme, 3 sütunlu ızgara, detay paneli, düzenleme, arşiv |
+| v0.2 Bugün | Web Worker'da kombin motoru (şablonlar, sert eleme, renk/formalite/hava/desen/zevk skoru, yağmur etkisi, yenilik bonusu, tekrar cezası, MMR çeşitlilik, isteğe bağlı aksesuar), Open-Meteo, kaydırmalı kart, "Neden?" gerekçeleri, flat-lay kolaj |
+| v0.3 Öğrenme | Giyeceğim / Kaydet / Geç / Bir daha gösterme / uzun bakış sinyalleri, hareketli ortalamalı zevk profili, ilk açılışta 8 kartlık kalibrasyon (Ben'den tekrarlanır), Kombinler ekranı, yeni parça bildirimi |
+| v0.4 Güvence | Yedekle / geri yükle (silüet dahil), aylık yedek hatırlatması, giyilmeyenler filtresi, istatistik, `storage.persist()` |
+| v1.0 Cila | Silüet üzerinde gösterim ("Üzerimde"), açık/koyu/sistem tema, sabah bildirimi, çevrimdışı uygulama kabuğu, PNG ana ekran ikonları |
+| Sonra | Bulut senkron, ücretli sanal deneme, kapsül gardırop (dokümanda da "sonra" aşaması) |
+
+**Bilinen sınırlar**
+- Sabah bildirimi Android Chrome'da, ana ekrana eklenmiş uygulamada çalışır; saati tarayıcı seçer
+  (uygulama 06-11 arası, günde bir kez gösterir). iPhone arka planda zamanlanmış bildirime izin vermez;
+  bunun için bir push sunucusu gerekir (sonraki aşama). iPhone'da uygulamayı açınca kombin zaten hazır.
+- Arka plan silme modeli ilk parçada bir kez iner (~40 MB), sonra çevrimdışı çalışır.
+- Skor eşikleri ve silüet oranları başlangıç değerleri; gerçek dolapla ayarlanmalı.
 
 ## Yapı
 
@@ -48,7 +69,7 @@ formalite, kalınlık ve mevsim katalogdan dolar. Otomatik tür/desen tahmini i�
 cd worker
 npm install
 npx wrangler secret put ANTHROPIC_API_KEY
-# wrangler.toml içinde IZINLI_KOKEN'i uygulamanın yayın adresi yap
+# wrangler.toml içinde IZINLI_KOKEN'i uygulamanın yayın adresi yap (ör. https://gardrop.pages.dev)
 npx wrangler deploy
 ```
 
@@ -57,7 +78,7 @@ silinmiş kesit gider; orijinal fotoğraflar cihazda kalır.
 
 ## Karar bekleyenler (TASARIM.md bölüm 12)
 
-1. Varsayılan şehir şimdilik **Konya**; Ben ekranından arama ya da "Konumumu kullan" ile değişir.
+1. Varsayılan şehir **Ankara** (karar verildi); Ben ekranından arama ya da "Konumumu kullan" ile değişir.
 2. Ortamlar: Günlük, Okul, Staj, Dışarı, Şık.
-3. Kalibrasyondaki kart sayısı (öneri 8) henüz uygulanmadı.
+3. Kalibrasyon 8 kart.
 4. Kıyafet fiyatı alanı yok.

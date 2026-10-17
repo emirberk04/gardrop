@@ -1,5 +1,5 @@
-import type { Kiyafet } from '../db/types';
-import type { Parca, UretimIstegi, UretimSonucu } from './tipler';
+import type { UretimIstegi, UretimSonucu } from './tipler';
+export { ozet } from './ozet';
 
 // Kombin motoru Web Worker'da çalışır, arayüz donmaz (bölüm 7).
 let worker: Worker | null = null;
@@ -27,9 +27,4 @@ export function kombinUret(istek: UretimIstegi): Promise<UretimSonucu> {
     bekleyen.set(no, { coz, red });
     al().postMessage({ no, istek });
   });
-}
-
-export function ozet(k: Kiyafet): Parca {
-  const { foto: _f, kesit: _k, ...geri } = k;
-  return geri;
 }

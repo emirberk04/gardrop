@@ -96,7 +96,7 @@ Uygulama her zaman buraya açılır. Soru: **"Bugün ne giysem?"**
 ```
 ┌──────────────────────────────────┐
 │ Cumartesi, 17 Ekim               │
-│ ☁ Konya · 14° · yağmur %20       │
+│ ☁ Ankara · 14° · yağmur %20      │
 ├──────────────────────────────────┤
 │ Bugün için 12 kombin             │
 │ ┌──────────────────────────────┐ │
@@ -194,7 +194,7 @@ Kamera açılır, parçayı çek. Arka plan otomatik silinir, etiketler önceden
 
 ### 4.5 Ben
 
-- Şehir (otomatik konum reddedilirse elle seçilir. Varsayılan: Konya)
+- Şehir (otomatik konum reddedilirse elle seçilir. Varsayılan: Ankara)
 - Soğuğa/sıcağa hassasiyet kaydırıcısı (üşüyen ↔ sıcak tutan)
 - Tema: Sistem / Açık / Koyu
 - Zevk kalibrasyonunu tekrarla
@@ -425,7 +425,7 @@ Kaynak: **Open-Meteo** (ücretsiz, anahtar gerekmez, ticari olmayan kullanım). 
 
 Bunlar başlangıç değerleri. Ben sekmesindeki "üşüyen ↔ sıcak tutan" kaydırıcısı hedef aralığı yukarı/aşağı kaydırır.
 Yağmur olasılığı > %50 ise: su geçirmez ayakkabı ve yağmurluk skoru artar, süet/kumaş ayakkabı düşer.
-Konum izni verilmezse şehir elle seçilir (varsayılan Konya).
+Konum izni verilmezse şehir elle seçilir (varsayılan Ankara).
 
 ### 7.5 "Beni orada göster"
 
@@ -528,7 +528,7 @@ Bulut senkron (telefon + bilgisayar) sonraki aşama: Supabase ya da Cloudflare R
 | Sanal deneme kalitesi | İsteğe bağlı, ayrı aşamada, önce küçük denemeyle |
 
 **Karar bekleyen:**
-1. Hava için şehir: Konya mı Ankara mı varsayılan olsun, yoksa konuma göre otomatik mi?
+1. ~~Hava için şehir: Konya mı Ankara mı varsayılan olsun, yoksa konuma göre otomatik mi?~~ Karar: **Ankara**, Ben ekranından arama ya da konumla değişir.
 2. Ortam listesi (Günlük, Okul, Staj, Dışarı, Şık) senin gerçek günlerine uyuyor mu?
 3. Zevk kalibrasyonunda kaç kombin sorulsun (öneri: 8)?
 4. Kıyafet fiyatı girmek ister misin? (Giyim başına maliyet hesabı için, isteğe bağlı bir sonraki aşama)

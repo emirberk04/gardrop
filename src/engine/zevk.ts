@@ -77,3 +77,31 @@ export function kisiselZevk(profil: ZevkProfili, parcalar: Parca[]) {
   const ham = top / cs.length;
   return { puan: 0.5 + Math.tanh(ham) * 0.5, ham };
 }
+
+/**
+ * İlk açılış kalibrasyonu (bölüm 3.3): örnek kombinlere "Bana uyar / Uymaz" cevapları
+ * renk ve tür örüntülerinin başlangıç değerleri olur. Parça seviyesine dokunmaz.
+ */
+export function kalibrasyonUygula(
+  profil: ZevkProfili,
+  cevaplar: { parcalar: Parca[]; uyar: boolean }[],
+  simdi = Date.now(),
+): ZevkProfili {
+  const toplam = { renk: new Map<string, number[]>(), tur: new Map<string, number[]>() };
+  const ekle = (m: Map<string, number[]>, k: string, v: number) => m.set(k, [...(m.get(k) ?? []), v]);
+  const begenilenFormalite: number[] = [];
+  for (const { parcalar, uyar } of cevaplar) {
+    const v = uyar ? 1.5 : -1.5;
+    for (const [a, b] of ciftler(parcalar)) {
+      ekle(toplam.tur, ciftAnahtari(a.tur, b.tur), v);
+      if (a.renkAdi !== b.renkAdi) ekle(toplam.renk, ciftAnahtari(a.renkAdi, b.renkAdi), v);
+    }
+    if (uyar) for (const p of parcalar) begenilenFormalite.push(p.formalite);
+  }
+  const ort = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const p: ZevkProfili = { ...profil, renkCifti: { ...profil.renkCifti }, turCifti: { ...profil.turCifti }, guncellendi: simdi };
+  for (const [k, vs] of toplam.renk) p.renkCifti[k] = ort(vs);
+  for (const [k, vs] of toplam.tur) p.turCifti[k] = ort(vs);
+  if (begenilenFormalite.length) p.formaliteTercihi = ort(begenilenFormalite);
+  return p;
+}

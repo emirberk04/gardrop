@@ -48,7 +48,7 @@ export function mevsimUygun(p: Parca, hissedilen: number) {
   return p.mevsim.some((m) => u.includes(m));
 }
 
-export type HavaSonucu = { puan: number; toplam: number; not: string; disGerekli: boolean };
+export type HavaSonucu = { puan: number; toplam: number; not: string; disGerekli: boolean; yagmurEtkisi: number };
 
 export function havaUyumu(parcalar: Parca[], hava: Hava, hassasiyet: number): HavaSonucu {
   const hedef = hedefSicaklik(hava.hissedilen, hassasiyet);
@@ -58,10 +58,13 @@ export function havaUyumu(parcalar: Parca[], hava: Hava, hassasiyet: number): Ha
 
   const ayakkabi = parcalar.find((p) => p.kategori === 'ayakkabi');
   const dis = parcalar.find((p) => p.kategori === 'dis');
+  // Yağmur doğrudan toplam skora yansır (ağırlıklı ortalamada kaybolmasın)
+  let yagmurEtkisi = 0;
   if (hava.yagmur > 50) {
-    if (ayakkabi?.suGecirmez) puan += 0.08;
-    else if (ayakkabi && /süet|kanvas|sandalet/.test(ayakkabi.tur)) puan -= 0.15;
-    if (dis?.suGecirmez) puan += 0.08;
+    if (ayakkabi?.suGecirmez) yagmurEtkisi += 0.06;
+    else if (ayakkabi && /süet|kanvas|sandalet/.test(ayakkabi.tur)) yagmurEtkisi -= 0.08;
+    else yagmurEtkisi -= 0.03;
+    if (dis?.suGecirmez) yagmurEtkisi += 0.04;
   }
   if (hava.ruzgar > 30 && dis) puan += 0.04;
 
@@ -71,5 +74,5 @@ export function havaUyumu(parcalar: Parca[], hava: Hava, hassasiyet: number): Ha
   else if (dis && hedef.merkez >= 4.5) not = `${derece} için ${dis.tur} gerekli`;
   if (hava.yagmur > 50 && (ayakkabi?.suGecirmez || dis?.suGecirmez)) not += ', yağmura hazır';
 
-  return { puan: clamp(puan, 0, 1), toplam, not, disGerekli: hedef.merkez >= 5 };
+  return { puan: clamp(puan, 0, 1), toplam, not, disGerekli: hedef.merkez >= 5, yagmurEtkisi };
 }

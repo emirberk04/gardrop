@@ -5,7 +5,7 @@ import { hexToLab, renkAdlandir } from '../lib/renk';
 import { hedefSicaklik } from './havaUyumu';
 import type { MotorBaglami, Parca } from './tipler';
 import { uret } from './uretim';
-import { sinyalUygula } from './zevk';
+import { kalibrasyonUygula, sinyalUygula } from './zevk';
 
 let n = 0;
 function parca(kategori: Kategori, tur: string, hex: string, o: Partial<Parca> = {}): Parca {
@@ -127,6 +127,18 @@ describe('kombin üretimi', () => {
     expect(sicak.kombinler.some((k) => k.parcalar.includes(mont))).toBe(false);
   });
 
+  it('yağmurda su geçirmez ayakkabı öne geçer', () => {
+    const ps = [
+      parca('ust', 'kazak', '#8a8d91', { sicaklik: 4 }),
+      parca('alt', 'kot', '#4a6385', { sicaklik: 3 }),
+      parca('ayakkabi', 'sneaker', '#f4f4f2'),
+      parca('ayakkabi', 'bot', '#5c4130', { suGecirmez: true, formalite: 3 }),
+      parca('dis', 'mont', '#1f2a44', { sicaklik: 4 }),
+    ];
+    const s = uret({ parcalar: ps, baglam: baglam({ hava: { hissedilen: 2, yagmur: 70, ruzgar: 20 } }) });
+    expect(s.kombinler[0].parcalar).toContain(ps[3].id);
+  });
+
   it('odak: sadece yeni parçayı içeren kombinler', () => {
     const ps = [
       parca('ust', 'tişört', '#f4f4f2'),
@@ -169,6 +181,23 @@ describe('kombin üretimi', () => {
   });
 });
 
+describe('aksesuar', () => {
+  it('soğukta bere eklenir, sıcakta eklenmez', () => {
+    const ps = [
+      parca('ust', 'kazak', '#8a8d91', { sicaklik: 4 }),
+      parca('alt', 'kot', '#1f2a44', { sicaklik: 3 }),
+      parca('ayakkabi', 'bot', '#5c4130'),
+      parca('dis', 'mont', '#1c1c1e', { sicaklik: 4 }),
+      parca('aksesuar', 'bere', '#1c1c1e', { sicaklik: 4, mevsim: ['kis'] }),
+    ];
+    const bere = ps[4].id;
+    const soguk = uret({ parcalar: ps, baglam: baglam({ hava: { hissedilen: 3, yagmur: 0, ruzgar: 5 } }) });
+    expect(soguk.kombinler[0].parcalar).toContain(bere);
+    const ilik = uret({ parcalar: ps, baglam: baglam({ hava: { hissedilen: 12, yagmur: 0, ruzgar: 5 } }) });
+    expect(ilik.kombinler.some((k) => k.parcalar.includes(bere))).toBe(false);
+  });
+});
+
 describe('zevk profili', () => {
   it('hareketli ortalama ile öğrenir, Kaydet skoru yükseltir', () => {
     const ps = [
@@ -184,5 +213,20 @@ describe('zevk profili', () => {
     const sonra = uret({ parcalar: ps, baglam: { ...b, zevk } }).kombinler.find((k) => k.parcalar.includes(ps[1].id))!;
     expect(sonra.skor).toBeGreaterThan(once.skor);
     expect(zevk.parcaCifti[[ps[1].id, ps[2].id].sort().join('|')]).toBeLessThan(3);
+  });
+});
+
+describe('kalibrasyon', () => {
+  it('beğenilen renk ve tür çiftleri başlangıç ağırlığı alır, parça çiftine dokunmaz', () => {
+    const begen = [parca('ust', 'gömlek', '#f4f4f2'), parca('alt', 'chino', '#1f2a44')];
+    const begenme = [parca('ust', 'kapüşonlu', '#e07a2e'), parca('alt', 'kargo pantolon', '#2f5fa8')];
+    const z = kalibrasyonUygula(BOS_ZEVK, [
+      { parcalar: begen, uyar: true },
+      { parcalar: begenme, uyar: false },
+    ]);
+    expect(z.turCifti['chino|gömlek']).toBeGreaterThan(0);
+    expect(z.turCifti['kapüşonlu|kargo pantolon']).toBeLessThan(0);
+    expect(Object.keys(z.parcaCifti)).toHaveLength(0);
+    expect(z.formaliteTercihi).toBe(2);
   });
 });

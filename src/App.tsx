@@ -1,5 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
-import { kaliciDepolamaIste } from './db/db';
+import { db } from './db/db';
+import { kaliciDepolamaIste } from './lib/depolama';
 import { Ikon, type IkonAdi } from './components/Ikon';
 import { ToastSaglayici } from './components/Toast';
 import { useAyarlar, useHava, useKiyafetler } from './lib/kancalar';
@@ -7,6 +9,7 @@ import { Ben } from './screens/Ben';
 import { Bugun } from './screens/Bugun';
 import { Dolap } from './screens/Dolap';
 import { Ekle } from './screens/Ekle';
+import { Kalibrasyon } from './screens/Kalibrasyon';
 import { Kombinler } from './screens/Kombinler';
 
 type Sekme = 'bugun' | 'dolap' | 'kombinler' | 'ben';
@@ -27,6 +30,9 @@ export function App() {
   const kiyafetler = useKiyafetler();
   const ayarlar = useAyarlar();
   const hava = useHava(ayarlar);
+  // Yükleniyor (undefined) ile "hiç kayıt yok" ayrımı için sarmalanmış sorgu
+  const ilkKayit = useLiveQuery(async () => ({ a: await db.ayarlar.get('ben') }), []);
+  const karsilama = !!ilkKayit && !ilkKayit.a?.kalibrasyonYapildi;
 
   useEffect(() => {
     kaliciDepolamaIste();
@@ -46,6 +52,18 @@ export function App() {
     setOdak(id);
     git('kombinler');
   };
+
+  if (!ilkKayit) return null;
+
+  if (karsilama) {
+    return (
+      <ToastSaglayici>
+        <div className="uygulama" style={{ paddingBottom: 'calc(var(--safe-b) + 16px)' }}>
+          <Kalibrasyon karsilama bitti={() => git('bugun')} />
+        </div>
+      </ToastSaglayici>
+    );
+  }
 
   return (
     <ToastSaglayici>

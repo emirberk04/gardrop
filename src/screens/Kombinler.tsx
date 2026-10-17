@@ -3,7 +3,8 @@ import type { Ayarlar, Kiyafet, Ortam } from '../db/types';
 import { skorla } from '../engine/uretim';
 import { ozet } from '../engine/motor';
 import type { SkorluKombin } from '../engine/tipler';
-import { Kolaj, SkorEtiketi } from '../components/Kolaj';
+import { KombinGorseli, Kolaj, SkorEtiketi } from '../components/Kolaj';
+import { ayarGuncelle } from '../db/db';
 import { Panel } from '../components/Panel';
 import { useToast } from '../components/Toast';
 import { birDahaGosterme, giyecegim, kaydetDegistir } from '../lib/eylemler';
@@ -135,7 +136,7 @@ export function Kombinler({ kiyafetler, ayarlar, hava, odak, odagiKaldir }: Prop
         <button className="btn tam" style={{ marginTop: 16 }} onClick={() => setGosterilen((g) => g + 30)}>Daha fazla göster</button>
       )}
 
-      <KombinPanel k={secili} parcalar={secili ? parcalar(secili) : []} kapat={() => setSecili(null)} hava={hava} kayitli={!!secili && kayitlar.some((x) => x.id === secili.id && x.durum === 'kayitli')} />
+      <KombinPanel ayarlar={ayarlar} k={secili} parcalar={secili ? parcalar(secili) : []} kapat={() => setSecili(null)} hava={hava} kayitli={!!secili && kayitlar.some((x) => x.id === secili.id && x.durum === 'kayitli')} />
     </main>
   );
 }
@@ -161,7 +162,7 @@ function MiniKombin({ k, parcalar, ac }: { k: SkorluKombin; parcalar: Kiyafet[];
   );
 }
 
-function KombinPanel({ k, parcalar, kapat, hava, kayitli }: { k: SkorluKombin | null; parcalar: Kiyafet[]; kapat: () => void; hava: HavaDurumu | null; kayitli: boolean }) {
+function KombinPanel({ ayarlar, k, parcalar, kapat, hava, kayitli }: { ayarlar: Ayarlar; k: SkorluKombin | null; parcalar: Kiyafet[]; kapat: () => void; hava: HavaDurumu | null; kayitli: boolean }) {
   const toast = useToast();
   if (!k) return null;
   return (
@@ -186,7 +187,7 @@ function KombinPanel({ k, parcalar, kapat, hava, kayitli }: { k: SkorluKombin | 
       }
     >
       <div className="kombin-kart" style={{ marginBottom: 12 }}>
-        <Kolaj parcalar={parcalar} />
+        <KombinGorseli parcalar={parcalar} siluet={ayarlar.siluet} gorunum={ayarlar.gorunum} degistir={(gorunum) => ayarGuncelle({ gorunum })} />
       </div>
       <p style={{ margin: '0 0 4px', fontWeight: 600 }}>{parcalar.map((p) => buyukHarf(`${p.renkAdi} ${p.tur}`)).join(' · ')}</p>
       <ul className="neden">{k.gerekceler.map((g) => <li key={g.metin}>{g.metin}</li>)}</ul>

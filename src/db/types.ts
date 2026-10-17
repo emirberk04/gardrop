@@ -73,5 +73,10 @@ export type Ayarlar = {
   etiketSunucusu: string; // boşsa AI etiketleme kapalı
   kalibrasyonYapildi: boolean;
   sonYedek?: number;
+  yedekErtelendi?: number; // aylık yedek hatırlatması "Sonra" dendiği zaman
+  siluet?: Blob; // boydan, arka planı silinmiş fotoğraf (bölüm 7.5, aşama 2)
+  gorunum: 'kolaj' | 'siluet';
+  bildirim: boolean; // sabah kombin bildirimi
+  sonBildirim?: string; // YYYY-MM-DD
   sonHava?: { zaman: number; hava: Hava; kod: number; sicaklik: number };
 };

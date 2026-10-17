@@ -1,6 +1,6 @@
 import { ayarlariAl, db, zevkAl } from '../db/db';
-import type { Hava, Kiyafet, Kombin, KombinDurum } from '../db/types';
-import { ozet } from '../engine/motor';
+import type { Ayarlar, Hava, Kiyafet, Kombin, KombinDurum } from '../db/types';
+import { ozet } from '../engine/ozet';
 import { sinyalUygula, type SinyalTuru } from '../engine/zevk';
 import { bugunStr } from './util';
 
@@ -69,6 +69,11 @@ export async function kaydetDegistir(k: KombinGirdi) {
   return true;
 }
 
+/** Kartta uzun süre kalmak: zayıf olumlu sinyal (+0.5). Kombin kaydı değişmez. */
+export async function uzunBakti(k: KombinGirdi) {
+  await ogren(k.parcalar, 'bakti');
+}
+
 /** ✕ Geç (−1): bu sefer değil. Bugün bir daha gösterilmez. */
 export async function gec(k: KombinGirdi) {
   await kombinYaz(k.parcalar, k.id, k.skor, (e) => (e === 'kayitli' || e === 'giyildi' ? e : 'reddedildi'));
@@ -119,7 +124,9 @@ export async function yedekOlustur(): Promise<Blob> {
     kombinler: await db.kombinler.toArray(),
     gunluk: await db.gunluk.toArray(),
     zevk: await db.zevk.toArray(),
-    ayarlar: await db.ayarlar.toArray(),
+    ayarlar: await Promise.all(
+      (await db.ayarlar.toArray()).map(async (a) => ({ ...a, siluet: a.siluet ? await blobToB64(a.siluet) : undefined })),
+    ),
   };
   return new Blob([JSON.stringify(yedek)], { type: 'application/json' });
 }
@@ -147,6 +154,8 @@ export async function yedekYukle(dosya: File) {
     await db.kombinler.bulkPut(y.kombinler);
     await db.gunluk.bulkPut(y.gunluk);
     await db.zevk.bulkPut(y.zevk);
-    await db.ayarlar.bulkPut(y.ayarlar);
+    await db.ayarlar.bulkPut(
+      (y.ayarlar as (Omit<Ayarlar, 'siluet'> & { siluet?: string })[]).map((a) => ({ ...a, siluet: a.siluet ? b64ToBlob(a.siluet) : undefined })),
+    );
   });
 }

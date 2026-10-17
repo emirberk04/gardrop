@@ -3,12 +3,12 @@ import { ayarGuncelle } from '../db/db';
 import type { Ayarlar, Kiyafet, Ortam } from '../db/types';
 import type { SkorluKombin } from '../engine/tipler';
 import { Ikon } from '../components/Ikon';
-import { Kolaj, SkorEtiketi } from '../components/Kolaj';
+import { KombinGorseli, SkorEtiketi } from '../components/Kolaj';
 import { useToast } from '../components/Toast';
-import { bugunkuGiymeyiGeriAl, gec, giyecegim, kaydetDegistir } from '../lib/eylemler';
+import { bugunkuGiymeyiGeriAl, gec, giyecegim, kaydetDegistir, uzunBakti, yedekIndir } from '../lib/eylemler';
 import { havaAciklama, havaSimgesi, type HavaDurumu } from '../lib/hava';
 import { useKombinKayitlari, useKombinler, useSonGunluk } from '../lib/kancalar';
-import { bugunStr } from '../lib/util';
+import { GUN, bugunStr, gunOnce } from '../lib/util';
 
 export const ORTAMLAR: { id: Ortam; ad: string }[] = [
   { id: 'gunluk', ad: 'Günlük' },
@@ -86,6 +86,8 @@ export function Bugun({ kiyafetler, ayarlar, hava, ekle, beneGit, kombinlereGit 
         <HavaSatiri ayarlar={ayarlar} hava={hava} beneGit={beneGit} />
       </header>
 
+      <YedekHatirlatma ayarlar={ayarlar} kiyafetler={aktif} />
+
       <div className="chipler" style={{ marginBottom: 12 }} role="group" aria-label="Ortam">
         {ORTAMLAR.map((o) => (
           <button key={o.id} className="chip kucuk-chip" aria-pressed={ayarlar.ortam === o.id} onClick={() => ayarGuncelle({ ortam: o.id })}>
@@ -101,7 +103,7 @@ export function Bugun({ kiyafetler, ayarlar, hava, ekle, beneGit, kombinlereGit 
           <p className="soluk" style={{ margin: 0 }}>Bir üst, bir alt ve bir ayakkabı eklediğinde ilk kombinlerin burada olur.</p>
         </div>
       ) : bugunGiyilen && harita.size ? (
-        <BugunGiyilen kombinId={bugunGiyilen.kombinId} harita={harita} />
+        <BugunGiyilen kombinId={bugunGiyilen.kombinId} harita={harita} ayarlar={ayarlar} />
       ) : sonuc?.eksik ? (
         <div className="kutu" style={{ textAlign: 'center' }}>
           <p style={{ margin: '0 0 12px' }}>{sonuc.eksik}</p>
@@ -119,6 +121,7 @@ export function Bugun({ kiyafetler, ayarlar, hava, ekle, beneGit, kombinlereGit 
             parcalar={parcalar(simdiki)}
             sag={() => eylem.kaydet(simdiki)}
             sol={() => eylem.gec(simdiki)}
+            ayarlar={ayarlar}
           />
           <div className="noktalar" aria-hidden="true">
             {deste.map((k, i) => <span key={k.id} className={i === sira ? 'aktif' : ''} />)}
@@ -181,12 +184,20 @@ function AtimButonu(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   );
 }
 
-function KaydirmaKarti({ kombin, parcalar, sag, sol }: { kombin: SkorluKombin; parcalar: Kiyafet[]; sag: () => void; sol: () => void }) {
+const UZUN_BAKIS_MS = 6000;
+
+function KaydirmaKarti({ kombin, parcalar, sag, sol, ayarlar }: { kombin: SkorluKombin; parcalar: Kiyafet[]; sag: () => void; sol: () => void; ayarlar: Ayarlar }) {
   const ref = useRef<HTMLDivElement>(null);
   const sagIpucu = useRef<HTMLDivElement>(null);
   const solIpucu = useRef<HTMLDivElement>(null);
   const baslangic = useRef<{ x: number; y: number; dx: number; yatay: boolean | null } | null>(null);
   const [neden, setNeden] = useState(false);
+
+  // Kartta uzun süre kalmak zayıf olumlu sinyal (bölüm 3.2)
+  useEffect(() => {
+    const t = setTimeout(() => uzunBakti(kombin), UZUN_BAKIS_MS);
+    return () => clearTimeout(t);
+  }, [kombin]);
 
   const uygula = (dx: number, gecis: boolean) => {
     const el = ref.current;
@@ -239,7 +250,7 @@ function KaydirmaKarti({ kombin, parcalar, sag, sol }: { kombin: SkorluKombin; p
         aria-roledescription="kaydırılabilir kart"
         aria-label={`Kombin: ${parcalar.map((p) => `${p.renkAdi} ${p.tur}`).join(', ')}. ${kombin.etiket}.`}
       >
-        <Kolaj parcalar={parcalar} />
+        <KombinGorseli parcalar={parcalar} siluet={ayarlar.siluet} gorunum={ayarlar.gorunum} degistir={(gorunum) => ayarGuncelle({ gorunum })} />
         <div className="kart-alt">
           <div className="satir">
             <SkorEtiketi etiket={kombin.etiket} />
@@ -250,7 +261,9 @@ function KaydirmaKarti({ kombin, parcalar, sag, sol }: { kombin: SkorluKombin; p
           </div>
           {neden && (
             <ul className="neden">
-              {kombin.gerekceler.map((g) => <li key={g.metin}>{g.metin}</li>)}
+              {kombin.gerekceler
+                .filter((g) => g.metin.toLocaleLowerCase('tr') !== kombin.havaNotu.toLocaleLowerCase('tr'))
+                .map((g) => <li key={g.metin}>{g.metin}</li>)}
             </ul>
           )}
         </div>
@@ -259,13 +272,13 @@ function KaydirmaKarti({ kombin, parcalar, sag, sol }: { kombin: SkorluKombin; p
   );
 }
 
-function BugunGiyilen({ kombinId, harita }: { kombinId: string; harita: Map<string, Kiyafet> }) {
+function BugunGiyilen({ kombinId, harita, ayarlar }: { kombinId: string; harita: Map<string, Kiyafet>; ayarlar: Ayarlar }) {
   const parcalar = kombinId.split('+').map((id) => harita.get(id)).filter((x): x is Kiyafet => !!x);
   return (
     <div className="yigin">
       <h2 className="bolum-basligi">Bugünün kombini</h2>
       <div className="kombin-kart">
-        <Kolaj parcalar={parcalar} />
+        <KombinGorseli parcalar={parcalar} siluet={ayarlar.siluet} gorunum={ayarlar.gorunum} degistir={(gorunum) => ayarGuncelle({ gorunum })} />
         <div className="kart-alt">
           <div className="satir">
             <span className="skor cok-sik">✓ Giyiyorsun</span>
@@ -274,6 +287,26 @@ function BugunGiyilen({ kombinId, harita }: { kombinId: string; harita: Map<stri
         </div>
       </div>
       <button className="btn tam" onClick={() => bugunkuGiymeyiGeriAl()}>Değiştir</button>
+    </div>
+  );
+}
+
+/** Aylık yedek hatırlatması (bölüm 9). iPhone verisi silinebilir; tek dokunuşla yedek alınır. */
+function YedekHatirlatma({ ayarlar, kiyafetler }: { ayarlar: Ayarlar; kiyafetler: Kiyafet[] }) {
+  const toast = useToast();
+  if (kiyafetler.length < 5) return null;
+  const ilkEkleme = Math.min(...kiyafetler.map((k) => k.eklendi));
+  const referans = ayarlar.sonYedek ?? ilkEkleme;
+  const gun = gunOnce(referans) ?? 0;
+  const ertelendi = ayarlar.yedekErtelendi != null && Date.now() - ayarlar.yedekErtelendi < 7 * GUN;
+  if (gun < 30 || ertelendi) return null;
+  return (
+    <div className="uyari" style={{ marginBottom: 12 }}>
+      <span>{ayarlar.sonYedek ? `Son yedeğin ${gun} gün önce.` : 'Henüz yedek almadın.'} Dolabın güvende olsun.</span>
+      <span style={{ display: 'flex', gap: 12 }}>
+        <button className="baglanti" onClick={() => ayarGuncelle({ yedekErtelendi: Date.now() })}>Sonra</button>
+        <button className="baglanti" onClick={async () => { await yedekIndir(); toast('Yedek indirildi.'); }}>Yedekle</button>
+      </span>
     </div>
   );
 }

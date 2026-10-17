@@ -24,7 +24,7 @@ export default defineConfig({
     kullanilmayanOrtDosyalariniAt(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Gardırop',
         short_name: 'Gardırop',
@@ -35,25 +35,18 @@ export default defineConfig({
         background_color: '#F1F3F0',
         theme_color: '#2F3E6B',
         icons: [
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
       },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
-        // Arka plan silme modeli büyük; ilk kullanımda iner ve çalışma zamanında önbelleğe alınır.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,
-            handler: 'CacheFirst',
-            options: { cacheName: 'fonts', expiration: { maxEntries: 20 } },
-          },
-          {
-            urlPattern: /^https:\/\/staticimgly\.com\//,
-            handler: 'CacheFirst',
-            options: { cacheName: 'bg-model', expiration: { maxEntries: 60 } },
-          },
-        ],
       },
     }),
   ],
